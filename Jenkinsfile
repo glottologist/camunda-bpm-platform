@@ -1,6 +1,44 @@
 // https://github.com/camunda/jenkins-global-shared-library
 @Library(['camunda-ci', 'cambpm-jenkins-shared-library']) _
 
+String getAgent(String dockerImage = 'gcr.io/ci-30-162810/centos:v0.4.6', Integer cpuLimit = 4){
+  String mavenForkCount = cpuLimit;
+  String mavenMemoryLimit = cpuLimit * 2;
+  """
+metadata:
+  labels:
+    agent: ci-cambpm-camunda-cloud-build
+spec:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: agents-n1-standard-32-netssd-preempt
+  tolerations:
+  - key: "agents-n1-standard-32-netssd-preempt"
+    operator: "Exists"
+    effect: "NoSchedule"
+  containers:
+  - name: "jnlp"
+    image: "${dockerImage}"
+    args: ['\$(JENKINS_SECRET)', '\$(JENKINS_NAME)']
+    tty: true
+    env:
+    - name: LIMITS_CPU
+      value: ${mavenForkCount}
+    - name: TZ
+      value: Europe/Berlin
+    resources:
+      limits:
+        cpu: ${cpuLimit}
+        memory: ${mavenMemoryLimit}Gi
+      requests:
+        cpu: ${cpuLimit}
+        memory: ${mavenMemoryLimit}Gi
+    workingDir: "/home/work"
+    volumeMounts:
+      - mountPath: /home/work
+        name: workspace-volume
+  """
+}
+
 pipeline {
   agent none
   options {
