@@ -1,7 +1,8 @@
 import groovy.json.JsonOutput
 
 // https://github.com/camunda/jenkins-global-shared-library
-@Library('camunda-ci') _
+// https://github.com/camunda/cambpm-jenkins-shared-library
+@Library(['camunda-ci', 'cambpm-jenkins-shared-library@pipeline-extract-withlabels']) _
 
 String getAgent(String dockerImage = 'gcr.io/ci-30-162810/centos:v0.4.6', Integer cpuLimit = 4){
   String mavenForkCount = cpuLimit;
@@ -56,7 +57,7 @@ pipeline {
     stage('ASSEMBLY') {
       when {
         expression {
-          env.BRANCH_NAME == defaultBranch() || !pullRequest.labels.contains('no-build')
+          cambpmWithLabels()
         }
         beforeAgent true
       }
@@ -463,7 +464,7 @@ pipeline {
         }
         when {
           expression {
-            skipStageType(failedStageTypes, env.PROFILE) && (withLabels(getLabels(env.PROFILE)) || withDbLabels(env.DB))
+            skipStageType(failedStageTypes, env.PROFILE) && (cambpmWithLabels(getLabels(env.PROFILE)) || withDbLabels(env.DB))
           }
           beforeAgent true
         }
@@ -720,26 +721,8 @@ void runMaven(boolean runtimeStash, boolean archivesStash, boolean qaStash, Stri
   }
 }
 
-boolean withLabels(List labels) { // TODO
-  if (env.BRANCH_NAME != defaultBranch() && !pullRequest.labels.contains('no-build')) {
-    return false;
-  }
-
-  if (env.BRANCH_NAME == defaultBranch()) {
-    return !labels.contains('daily');
-  } else if (changeRequest()) {
-    for (l in labels) {
-      if (pullRequest.labels.contains(l)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
 boolean withLabels(String... labels) {
-  return withLabels(Arrays.asList(labels));
+  return cambpmWithLabels(Arrays.asList(labels));
 }
 
 
