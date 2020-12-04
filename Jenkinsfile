@@ -57,7 +57,7 @@ pipeline {
     stage('ASSEMBLY') {
       when {
         expression {
-          cambpmWithLabels()
+          cambpmWithLabelsArray()
         }
         beforeAgent true
       }
@@ -464,7 +464,7 @@ pipeline {
         }
         when {
           expression {
-            skipStageType(failedStageTypes, env.PROFILE) && (cambpmWithLabels(getLabels(env.PROFILE)) || withDbLabels(env.DB))
+            skipStageType(failedStageTypes, env.PROFILE) && (cambpmWithLabelsArray(getLabels(env.PROFILE)) || withDbLabels(env.DB))
           }
           beforeAgent true
         }
@@ -722,7 +722,7 @@ void runMaven(boolean runtimeStash, boolean archivesStash, boolean qaStash, Stri
 }
 
 boolean withLabels(String... labels) {
-  return cambpmWithLabels(Arrays.asList(labels));
+  return cambpmWithLabelsArray(Arrays.asList(labels));
 }
 
 
